@@ -1,27 +1,30 @@
-// composables/useAirtable.js
+// composables/useairtable.js
 import { ref } from 'vue';
 import axios from 'axios';
 
-const airtableBase = 'your_airtable_base_id';
-const airtableTable = 'YourTableName';
-const apiKey = 'your_airtable_api_key'; 
+const airtableBase = 'app7AvGRiyQV3V3vP';
+const airtableTable = 'Core Prompts';
+const apiKey = process.env.NUXT_PUBLIC_AIRTABLE_API_KEY; // Ensure this is securely stored in your .env file
 
-export const useAirtable = () => {
-  const records = ref([]);
+export const useairtable = () => {
+  const prompts = ref([]);
+  const error = ref(null);
 
-  const fetchRecords = async () => {
-    const config = {
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-      },
-    };
+  const fetchPrompts = async () => {
     try {
-      const response = await axios.get(`https://api.airtable.com/v0/${airtableBase}/${encodeURIComponent(airtableTable)}`, config);
-      records.value = response.data.records;
-    } catch (error) {
-      console.error('Error fetching data from Airtable:', error);
+      const response = await axios.get(`https://api.airtable.com/v0/${airtableBase}/${encodeURIComponent(airtableTable)}`, {
+        headers: { Authorization: `Bearer ${apiKey}` },
+      });
+      prompts.value = response.data.records.map(record => ({
+        id: record.id,
+        ...record.fields,
+      }));
+      error.value = null;
+    } catch (err) {
+      console.error('Error fetching data from Airtable:', err);
+      error.value = 'Failed to fetch prompts from Airtable.';
     }
   };
 
-  return { records, fetchRecords };
+  return { prompts, fetchPrompts, error };
 };
